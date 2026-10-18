@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tokio en Noviembre · prueba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+:root{--cream:#F6F1E7;--paper:#FBF8F1;--ink:#1C1B19;--mute:#7A746A;--red:#B3261E;--line:#E4DCCB;--dark:#1E1E1E;--hl:#E8F0E4}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--cream)}
+#app{display:flex;height:100%}
+#side{width:390px;flex:none;background:var(--cream);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:5}
+#scroll{overflow-y:auto;flex:1;padding:0 24px 30px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.logo{width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 13px Fraunces,Georgia,serif}
+.badge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--ink);padding:3px 7px;border-radius:3px;font-weight:600}
+.kick{color:var(--red);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin:22px 0 8px}
+h1{font-family:Fraunces,Georgia,serif;font-weight:400;font-size:46px;line-height:1.02;margin:0 0 14px;letter-spacing:-.01em}
+h1 em{color:var(--red);font-style:italic}
+.intro{font-family:Fraunces,Georgia,serif;font-size:16px;line-height:1.45;color:#4a463f;margin:0 0 18px}
+.stats{display:flex;gap:26px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats b{display:block;font-size:16px}.stats span{font-size:11px;color:var(--mute)}
+.prog{height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden}.prog div{height:100%;background:var(--red);width:0;transition:width .3s}
+.jh{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 4px}
+.jh h2{font-family:Fraunces,Georgia,serif;font-weight:400;font-size:26px;margin:0}
+#play{background:none;border:0;color:var(--red);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.hint{font-size:12.5px;color:var(--mute);margin:0 0 12px;line-height:1.4}
+.zone{border-top:1px solid var(--line)}
+.zh{display:flex;align-items:center;gap:12px;padding:11px 8px;cursor:pointer;border-radius:6px}
+.zh:hover{background:#EFE8DA}.zone.on .zh{background:var(--hl)}
+.zn{width:30px;height:30px;border-radius:50%;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none;background:var(--paper)}
+.zone.on .zn{background:var(--dark);color:#fff;border-color:var(--dark)}
+.zt{flex:1;min-width:0}.zt small{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}.zt b{font-size:14.5px;font-weight:600}
+.zc{font-size:11px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;text-align:right}
+.places{display:none;padding:2px 0 10px 50px}.zone.open .places{display:block}
+.pl{display:flex;gap:9px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line)}
+.pl:last-child{border-bottom:0}
+.pl input,.sb input{accent-color:var(--red);width:17px;height:17px;flex:none;margin-top:1px}
+.dot{width:20px;height:20px;border-radius:50%;flex:none;color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.pt{flex:1;min-width:0;cursor:pointer}.pt b{font-size:13px;font-weight:600}.pt .n{font-size:11.5px;color:#5c574f;margin-top:1px;line-height:1.35}
+.pl.done .pt b{text-decoration:line-through;color:#999}
+.sb{display:flex;gap:7px;align-items:flex-start;font-size:12px;margin-top:5px}.sb.done b{text-decoration:line-through;color:#999}.sb i{font-style:normal;color:var(--mute);font-weight:600;width:22px;flex:none}
+.flag{font-size:9px;font-weight:700;letter-spacing:.04em;padding:1px 4px;border-radius:3px;color:#fff;margin-left:4px;vertical-align:1px}
+.foot{font-size:10.5px;color:var(--mute);margin-top:18px;line-height:1.5}
+#mapwrap{flex:1;position:relative}#map{position:absolute;inset:0}
+.ctl{position:absolute;z-index:3;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+#routebox{left:14px;top:14px;background:var(--dark);color:#fff;padding:8px 12px;border-radius:4px}
+#legend{left:14px;bottom:30px;background:rgba(251,248,241,.94);padding:8px 12px;border-radius:5px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 6px rgba(0,0,0,.15);color:#333}
+#legend .lz{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--dark);vertical-align:-2px;margin-right:5px}
+#legend .lp{display:inline-block;width:9px;height:9px;border-radius:50%;background:#E67E22;vertical-align:-1px;margin-right:5px;border:1.5px solid #fff;box-shadow:0 0 0 1px #aaa}
+#legend .lr{display:inline-block;width:24px;border-top:2px dashed #222;vertical-align:3px;margin-right:5px}
+.tg{border:1px solid #333;background:#fff;border-radius:3px;padding:4px 8px;cursor:pointer;font:600 10.5px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.tg.on{background:var(--dark);color:#fff}
+#drag{left:50%;transform:translateX(-50%);top:14px;background:var(--dark);color:#fff;padding:7px 11px;border-radius:4px;transition:opacity .6s}
+.zm{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.zm .c{width:34px;height:34px;border-radius:50%;background:var(--dark);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:600 12px Inter,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.zm.on .c{background:var(--red)}
+.zm .l{margin-top:4px;background:var(--dark);color:#fff;font:600 9.5px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;border-radius:2px;white-space:nowrap}
+.pm{width:22px;height:22px;border-radius:50%;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:700 9.5px Inter,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer}
+.pm.done{opacity:.5}
+.maplibregl-popup-content{font-family:Inter,sans-serif;border-radius:6px;padding:12px 14px;max-width:270px}
+.pop b{font:600 15px Fraunces,Georgia,serif}.pop .n{font-size:12.5px;color:#444;margin:5px 0}.pop label{display:flex;gap:6px;font-size:12.5px;margin-top:4px;align-items:flex-start}
+.pop .cat{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+#handle{display:none}
+@media (max-width:800px){
+ #app{display:block}
+ #mapwrap{position:fixed;inset:0}
+ #side{position:fixed;left:0;right:0;bottom:0;width:100%;height:64%;border-right:0;border-radius:16px 16px 0 0;box-shadow:0 -4px 18px rgba(0,0,0,.25);transition:transform .28s}
+ #side.min{transform:translateY(calc(100% - 150px))}
+ #handle{display:block;width:44px;height:5px;background:#cfc6b4;border-radius:3px;margin:8px auto 0;cursor:pointer}
+ .top{padding:8px 18px 8px}#scroll{padding:0 18px 30px}
+ h1{font-size:34px}.kick{margin-top:12px}
+ #legend{bottom:auto;top:56px;left:10px;right:52px;font-size:9.5px;gap:8px;padding:6px 8px}
+ #routebox{left:10px;top:10px}#drag{display:none}
+}
+</style></head><body>
+<div id="app">
+<aside id="side">
+ <div id="handle"></div>
+ <div class="top"><div class="brand"><div class="logo">東</div>Japón · Nov 2027</div><span class="badge" id="ver"></span></div>
+ <div id="scroll">
+  <div class="kick">Noviembre 2027 · fechas por decidir · 6 viajeros</div>
+  <h1>Tokio en <em>Noviembre.</em></h1>
+  <p class="intro">La base del viaje. Nueve zonas de la ciudad (y unas afueras) con todo lo que el corillo quiere ver, comer y vivir: de Ikebukuro a la bahía, sin orden fijo todavía.</p>
+  <div class="stats"><div><b id="st1"></b><span>lugares y opciones</span></div><div><b id="st2"></b><span>zonas</span></div><div><b id="st3">0%</b><span>visitado</span></div></div>
+  <div class="prog"><div id="progf"></div></div>
+  <div class="jh"><h2>Las paradas</h2><button id="play">▶ Play ruta</button></div>
+  <p class="hint">Toca una zona pa' abrir sus lugares en el mapa. La ruta es solo indicativa: los días todavía no están decididos.</p>
+  <div id="zones"></div>
+  <div class="foot">Ramón · Jon · Jerry · Hiramdie · Cristina · Eli<br>Prototipo basado en los datos del mapa v1.0. Satélite: Esri World Imagery · Mapa y edificios: OpenFreeMap / © OpenStreetMap contributors · Relieve: Terrarium (Mapzen/AWS Open Data).</div>
+ </div>
+</aside>
+<div id="mapwrap"><div id="map"></div>
+ <div class="ctl" id="routebox">Ruta · <span id="rb">01–09</span></div>
+ <div class="ctl" id="legend"><span><i class="lz"></i>Parada (zona)</span><span><i class="lp"></i>Lugar a visitar</span><span><i class="lr"></i>Ruta indicativa</span>
+  <button class="tg on" id="tSat">Satélite</button><button class="tg on" id="t3d">Terreno 3D</button><button class="tg on" id="tBld">Edificios 3D</button></div>
+ <div class="ctl" id="drag">Arrastra pa' explorar · clic derecho pa' rotar</div>
+</div>
+</div>
+<script>
+const D={"version":"v1.0-prueba","cats":{"comida":["Comida","#E67E22"],"poke":["Pokémon / anime","#F1C40F"],"compras":["Compras","#2E86DE"],"cultura":["Cultura / samurái","#C0392B"],"noche":["Vida nocturna","#8E44AD"],"tragos":["Destilerías / cervecerías","#7B4A2A"],"activ":["Actividades","#16A085"]},"items":[{"map":"tko_w","name":"Cruce de Shibuya y estatua de Hachikō","cat":"activ","note":"El cruce famoso; pura energía de Tokio. Est. Shibuya (JR Yamanote).","lat":35.6595,"lon":139.7005,"flag":"","approx":false,"n":1,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"Meiji Jingū","cat":"cultura","note":"Santuario sintoísta en el bosque al lado de Harajuku; torii gigantes de madera.","lat":35.6748,"lon":139.6996,"flag":"","approx":false,"n":2,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"Ikebukuro","cat":"compras","note":"Zona de anime y tiendas. Est. Ikebukuro (JR Yamanote).","lat":35.7303,"lon":139.7145,"flag":"","approx":false,"n":3,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"ikebukuro"},{"map":"tko_w","name":"Pokémon Center Mega Tokyo + Pikachu Sweets","cat":"poke","note":"Sunshine City (alpa 2F), Ikebukuro. Símbolo: Pikachu + Miraidon.","lat":35.7288,"lon":139.7195,"flag":"","approx":false,"n":4,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"ikebukuro"},{"map":"tko_w","name":"Square Enix – Artnia (Shinjuku)","cat":"poke","note":"Tienda oficial con café y bar, Shinjuku Eastside Square 1F. Est. Higashi-Shinjuku. Pa' Jerry.","lat":35.6966,"lon":139.7086,"flag":"ESCOGER","approx":false,"n":5,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shinjuku"},{"map":"tko_w","name":"Square Enix Garden (Shibuya)","cat":"poke","note":"Shibuya Sakura Stage, lado SHIBUYA, 3F: productos, juegos y música.","lat":35.6563,"lon":139.7012,"flag":"ESCOGER","approx":false,"n":6,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"Nakano Broadway","cat":"compras","note":"Mall retro de figuras, manga y coleccionables (Mandarake). A pie desde est. Nakano.","lat":35.7089,"lon":139.6658,"flag":"","approx":false,"n":7,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"nakano"},{"map":"tko_w","name":"Escaleras de Kimi no Na wa (Suga Jinja)","cat":"poke","note":"Escena final de Your Name, en Yotsuya. Est. Yotsuya-sanchōme o Yotsuya.","lat":35.6853,"lon":139.7228,"flag":"","approx":true,"n":8,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shinjuku"},{"map":"tko_w","name":"Yoroniku (yakiniku wagyu)","cat":"comida","note":"Minami-Aoyama / Omotesandō: carne a la parrilla en la mesa. Reservar con tiempo.","lat":35.6602,"lon":139.7176,"flag":"","approx":false,"n":9,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"Yakiniku Jumbo (Shirokane)","cat":"comida","note":"Yakiniku de wagyu. Reservar con tiempo, somos 6.","lat":35.6469,"lon":139.7315,"flag":"","approx":false,"n":10,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"roppongi"},{"map":"tko_w","name":"Roppongi","cat":"noche","note":"Zona de discotecas y bares; aquí están las discos latinas. Opciones:","lat":35.6627,"lon":139.73,"flag":"","approx":false,"n":11,"city":"Tokio","sub":"Tokio – Oeste","subs":[{"id":"11a","name":"Sonidos Bar","note":"Disco latina: reggaetón, salsa, bachata, merengue y dembow.","flag":"ESCOGER"},{"id":"11b","name":"El Café Latino","note":"Clases de salsa/bachata y después baile social.","flag":"ESCOGER"},{"id":"11c","name":"Discos 'all-mix'","note":"Suelen poner reggaetón; chequear qué hay esa noche.","flag":""}],"zone":"roppongi"},{"map":"tko_w","name":"teamLab Borderless (Azabudai Hills)","cat":"activ","note":"Museo de arte digital 'sin mapa'. Solo vamos a una de teamLab: escoger.","lat":35.6612,"lon":139.7404,"flag":"ESCOGER","approx":false,"n":12,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"roppongi"},{"map":"tko_w","name":"Shinjuku de noche","cat":"noche","note":"Un solo punto con varias opciones en la misma zona; escojan esa noche.","lat":35.694,"lon":139.7025,"flag":"","approx":true,"n":13,"city":"Tokio","sub":"Tokio – Oeste","subs":[{"id":"13a","name":"Kabukichō","note":"La zona de discotecas y bares más movida.","flag":""},{"id":"13b","name":"Golden Gai","note":"Callejones con barras chiquititas de pocos asientos.","flag":""},{"id":"13c","name":"Omoide Yokochō","note":"Callejón de yakitori y cerveza bajo los faroles (salida oeste).","flag":""}],"zone":"shinjuku"},{"map":"tko_w","name":"Center Gai (Shibuya)","cat":"noche","note":"Barras y discos alrededor de Center Gai.","lat":35.6604,"lon":139.6986,"flag":"","approx":false,"n":14,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"Nonbei Yokochō (Shibuya)","cat":"noche","note":"Callejón de barritas al lado de las vías.","lat":35.6592,"lon":139.7029,"flag":"","approx":false,"n":15,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"Pokémon Center Shibuya","cat":"poke","note":"Shibuya PARCO 6F. Símbolo: Mewtwo + Mew (la única sin Pikachu).","lat":35.662,"lon":139.6987,"flag":"","approx":false,"n":16,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"shibuya"},{"map":"tko_w","name":"YEBISU BREWERY TOKYO","cat":"tragos","note":"Cervecería de Yebisu (Sapporo) en Ebisu. Tour en japonés; reservar en línea.","lat":35.642,"lon":139.7137,"flag":"","approx":false,"n":17,"city":"Tokio","sub":"Tokio – Oeste","subs":[],"zone":"roppongi"},{"map":"tko_e","name":"Akihabara","cat":"poke","note":"Paraíso otaku: electrónica, anime, juegos y arcades. A 2 paradas de Ueno.","lat":35.6984,"lon":139.7731,"flag":"","approx":false,"n":18,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"akiba"},{"map":"tko_e","name":"FF XIV Eorzea Cafe (Akiba)","cat":"poke","note":"Pasela Resorts AKIBA, 2F. Ver si hace falta reserva.","lat":35.6997,"lon":139.7709,"flag":"RESERVA?","approx":true,"n":19,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"akiba"},{"map":"tko_e","name":"Estatua de Saigō Takamori","cat":"cultura","note":"Con su perro, en el parque de Ueno. Perfecto el día de Akihabara/Ueno.","lat":35.7115,"lon":139.7741,"flag":"","approx":false,"n":20,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"akiba"},{"map":"tko_e","name":"Estatua de Kusunoki Masashige","cat":"cultura","note":"A caballo, en los jardines exteriores del Palacio Imperial (Kōkyo Gaien).","lat":35.6779,"lon":139.7585,"flag":"","approx":false,"n":21,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Jardines del Este del Palacio Imperial","cat":"activ","note":"Kōkyo Higashi Gyoen: jardines y ruinas del antiguo castillo de Edo.","lat":35.6867,"lon":139.7574,"flag":"OPCIÓN","approx":false,"n":22,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Asakusa – Sensō-ji","cat":"cultura","note":"El Tokio tradicional. Est. Asakusa (línea Ginza); temprano hay menos gente.","lat":35.7148,"lon":139.7967,"flag":"","approx":false,"n":23,"city":"Tokio","sub":"Tokio – Este","subs":[{"id":"23a","name":"Kaminarimon (Puerta del Trueno)","note":"El portón con el farol rojo gigante: la foto de entrada.","flag":""},{"id":"23b","name":"Calle Nakamise","note":"Tienditas y dulces típicos camino al templo.","flag":""},{"id":"23c","name":"Templo Sensō-ji","note":"El templo budista más antiguo de Tokio.","flag":""}],"zone":"asakusa"},{"map":"tko_e","name":"Bandai Character Street / FAN FUN STREET","cat":"poke","note":"Frente a Bandai en Komagata: Goku, Agumon, Doraemon, Ultraman, Kamen Rider... Gratis.","lat":35.7066,"lon":139.7963,"flag":"","approx":false,"n":24,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"asakusa"},{"map":"tko_e","name":"Asakusa Imahan (sukiyaki)","cat":"comida","note":"Casa principal en Kokusai-dōri, desde 1895: wagyu negro y Kobe. Combina con Asakusa.","lat":35.7128,"lon":139.791,"flag":"","approx":false,"n":25,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"asakusa"},{"map":"tko_e","name":"Ningyocho Imahan (sukiyaki)","cat":"comida","note":"Alternativa de Imahan en Ningyōchō.","lat":35.6863,"lon":139.783,"flag":"","approx":false,"n":26,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Ginza Ukai-tei (teppanyaki)","cat":"comida","note":"Al lado de est. Higashi-Ginza: el chef cocina el wagyu en la plancha frente a ti.","lat":35.668,"lon":139.7672,"flag":"","approx":false,"n":27,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Pokémon Center Tokyo DX","cat":"poke","note":"Nihonbashi Takashimaya S.C. (Edif. Este, 5F). Pikachu + Mew; Snorlax tamaño real.","lat":35.6805,"lon":139.7744,"flag":"","approx":false,"n":28,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Pokémon Cafe Tokyo","cat":"poke","note":"Mismo piso que el Tokyo DX. Hay que reservar con anticipación.","lat":35.6804,"lon":139.7744,"flag":"OPCIÓN","approx":false,"n":29,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Pokémon Store Tokyo Station","cat":"poke","note":"First Avenue Tokyo Station, 1F. Símbolo: confirmar.","lat":35.6819,"lon":139.7684,"flag":"CONFIRMAR","approx":false,"n":30,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Tokyo Ramen Street","cat":"comida","note":"En Tokyo Station First Avenue (B1): varias ramenerías famosas en un solo pasillo.","lat":35.6804,"lon":139.7679,"flag":"","approx":false,"n":31,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"marunouchi"},{"map":"tko_e","name":"Pokémon Center Skytree Town","cat":"poke","note":"Solamachi (East Yard, 4F), est. Oshiage. Pikachu + Rayquaza.","lat":35.7101,"lon":139.8107,"flag":"","approx":false,"n":32,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"asakusa"},{"map":"tko_e","name":"Tokyo Skytree","cat":"activ","note":"Final de la ruta de go-kart Asakusa & Skytree.","lat":35.71,"lon":139.8107,"flag":"","approx":false,"n":33,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"asakusa"},{"map":"tko_e","name":"Go-kart: Ruta Asakusa & Skytree","cat":"activ","note":"Street Kart por Asakusa y vuelta al Skytree; pa' principiantes. IDP Ginebra 1949 de papel. Punto aprox.","lat":35.7105,"lon":139.793,"flag":"OPCIÓN","approx":true,"n":34,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"asakusa"},{"map":"tko_e","name":"Go-kart: Ruta Tokyo Bay 'K-M' (Shin-Kiba)","cat":"activ","note":"Sale de Shin-Kiba, cruza el Rainbow Bridge y pasa por la Torre de Tokio. IDP Ginebra 1949. Punto aprox.","lat":35.6455,"lon":139.8265,"flag":"OPCIÓN","approx":true,"n":35,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"bahia"},{"map":"tko_e","name":"Rainbow Bridge","cat":"activ","note":"Vista desde la bahía de Odaiba; lo cruza la ruta K-M.","lat":35.6364,"lon":139.7634,"flag":"","approx":false,"n":36,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"bahia"},{"map":"tko_e","name":"Torre de Tokio","cat":"cultura","note":"Pasa la ruta de go-kart K-M.","lat":35.6586,"lon":139.7454,"flag":"","approx":false,"n":37,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"roppongi"},{"map":"tko_e","name":"Zōjō-ji","cat":"cultura","note":"Templo de la familia Tokugawa (mausoleos de shōgunes), con la Torre de Tokio detrás.","lat":35.6573,"lon":139.7483,"flag":"","approx":false,"n":38,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"roppongi"},{"map":"tko_e","name":"Odaiba – Edificio de Fuji TV","cat":"poke","note":"La esfera de Digimon Adventure (pelea con Myotismon). Est. Daiba; paseo por la bahía.","lat":35.627,"lon":139.7752,"flag":"","approx":false,"n":39,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"bahia"},{"map":"tko_e","name":"teamLab Planets (Toyosu)","cat":"activ","note":"Arte digital caminando descalzo por agua. Anunciado hasta fines de 2027: confirmar. Escoger una de teamLab.","lat":35.6492,"lon":139.7898,"flag":"ESCOGER","approx":false,"n":40,"city":"Tokio","sub":"Tokio – Este","subs":[],"zone":"bahia"},{"map":"tko_x","name":"Pokémon Center Tokyo-Bay","cat":"poke","note":"LaLaport TOKYO-BAY (West Wing, 2F), Funabashi (Chiba). Pikachu + Ampharos + Marill.","lat":35.686,"lon":139.9895,"flag":"","approx":false,"n":41,"city":"Tokio","sub":"Gran Tokio – afueras","subs":[],"zone":"afueras"},{"map":"tko_x","name":"Pokémon Store Narita (Terminal 1)","cat":"poke","note":"Aeropuerto de Narita, T1. Símbolo: confirmar.","lat":35.7713,"lon":140.387,"flag":"CONFIRMAR","approx":false,"n":42,"city":"Tokio","sub":"Gran Tokio – afueras","subs":[],"zone":"afueras"},{"map":"tko_x","name":"PokéPark Kanto (Yomiuriland)","cat":"poke","note":"Parque Pokémon permanente al aire libre en las colinas de Tama. Boletos con anticipación.","lat":35.6252,"lon":139.5188,"flag":"OPCIÓN","approx":false,"n":43,"city":"Tokio","sub":"Gran Tokio – afueras","subs":[],"zone":"afueras"},{"map":"tko_x","name":"Suntory – Cervecería Tokio Musashino","cat":"tragos","note":"En Fuchū. Tours por temporadas: ver si hay tour en noviembre.","lat":35.6601,"lon":139.477,"flag":"CONFIRMAR","approx":false,"n":44,"city":"Tokio","sub":"Gran Tokio – afueras","subs":[],"zone":"afueras"}],"zones":[{"id":"ikebukuro","name":"Ikebukuro","short":"Ikebukuro","lat":35.7295,"lon":139.716,"ord":1,"route":true},{"id":"nakano","name":"Nakano","short":"Nakano","lat":35.7085,"lon":139.6658,"ord":2,"route":true},{"id":"shinjuku","name":"Shinjuku y Yotsuya","short":"Shinjuku","lat":35.6935,"lon":139.704,"ord":3,"route":true},{"id":"shibuya","name":"Shibuya y Harajuku","short":"Shibuya","lat":35.664,"lon":139.7,"ord":4,"route":true},{"id":"roppongi","name":"Roppongi, Ebisu y Shiba","short":"Roppongi","lat":35.659,"lon":139.733,"ord":5,"route":true},{"id":"marunouchi","name":"Marunouchi, Nihonbashi y Ginza","short":"Marunouchi","lat":35.681,"lon":139.768,"ord":6,"route":true},{"id":"akiba","name":"Akihabara y Ueno","short":"Akihabara","lat":35.704,"lon":139.7735,"ord":7,"route":true},{"id":"asakusa","name":"Asakusa y Skytree","short":"Asakusa","lat":35.712,"lon":139.8,"ord":8,"route":true},{"id":"bahia","name":"Bahía: Odaiba, Toyosu y Shin-Kiba","short":"Bahía","lat":35.639,"lon":139.786,"ord":9,"route":true},{"id":"afueras","name":"Afueras: Funabashi, Narita, Tama y Fuchū","short":"Afueras","lat":35.705,"lon":139.95,"ord":0,"route":false}]};
+document.getElementById("ver").textContent=D.version;
+const FLAG={"CONFIRMAR":"#D35400","ESCOGER":"#2471A3","OPCIÓN":"#7D3C98","RESERVA?":"#B7950B","SUGERENCIA":"#117A65"};
+const KEY="japon2027_checks_v1.0";let done={};try{done=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(done))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const col=c=>D.cats[c][1], tc=c=>c==="poke"?"#111":"#fff";
+const ids=i=>[String(i.n)].concat(i.subs.map(s=>s.id)); const ALL=D.items.flatMap(ids);
+const flags=f=>f?`<span class="flag" style="background:${FLAG[f]}">${f}</span>`:"";
+const pad=n=>String(n).padStart(2,"0");
+const ROUTE=D.zones.filter(z=>z.route);
+// ---------- estilos
+const ESRI="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const ESRI_LAB="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}";
+const ESRI_ATT='Satélite: Tiles © Esri — Esri, Maxar, Earthstar Geographics y la comunidad GIS';
+let sat=true, terr=true, bld=true; const EXA=1.25;
+function satStyle(){return {version:8,glyphs:"https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+ sources:{esri:{type:"raster",tiles:[ESRI],tileSize:256,maxzoom:19,attribution:ESRI_ATT},
+  lab:{type:"raster",tiles:[ESRI_LAB],tileSize:256,maxzoom:19}},
+ layers:[{id:"esri",type:"raster",source:"esri"},{id:"lab",type:"raster",source:"lab",paint:{"raster-opacity":.85}}]}}
+const MAPSTYLE="https://tiles.openfreemap.org/styles/liberty";
+const map=new maplibregl.Map({container:"map",style:satStyle(),center:[139.745,35.685],zoom:11.3,pitch:55,bearing:-18,maxPitch:80,attributionControl:false,antialias:true});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-right");
+map.addControl(new maplibregl.AttributionControl({compact:true,customAttribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · OpenFreeMap · Terrarium DEM (Mapzen/AWS)'}),"bottom-right");
+function addExtras(){
+ if(!map.getSource("dem")) map.addSource("dem",{type:"raster-dem",tiles:["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],encoding:"terrarium",tileSize:256,maxzoom:13});
+ map.setTerrain(terr?{source:"dem",exaggeration:EXA}:null);
+ if(!map.getLayer("sky")&&map.setSky) try{map.setSky({"sky-color":"#cfe0ee","horizon-color":"#f3ead8","fog-color":"#f3ead8","sky-horizon-blend":.5,"horizon-fog-blend":.6,"fog-ground-blend":.3})}catch(e){}
+ if(!map.getSource("ofm")) map.addSource("ofm",{type:"vector",url:"https://tiles.openfreemap.org/planet"});
+ // quitar edificios 3D del estilo liberty si existen; usamos los nuestros
+ (map.getStyle().layers||[]).forEach(l=>{if(l.type==="fill-extrusion"&&l.id!=="bld3d")map.removeLayer(l.id)});
+ if(!map.getLayer("bld3d")) map.addLayer({id:"bld3d",type:"fill-extrusion",source:"ofm","source-layer":"building",minzoom:13,
+  paint:{"fill-extrusion-color":sat?"#e9e2d3":"#ddd5c6","fill-extrusion-height":["coalesce",["get","render_height"],10],"fill-extrusion-base":["coalesce",["get","render_min_height"],0],"fill-extrusion-opacity":sat?.75:.85}});
+ map.setLayoutProperty("bld3d","visibility",bld?"visible":"none");
+ const coords=ROUTE.map(z=>[z.lon,z.lat]);
+ if(!map.getSource("route")) map.addSource("route",{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates:smooth(coords)}}});
+ if(!map.getLayer("route-casing")) map.addLayer({id:"route-casing",type:"line",source:"route",paint:{"line-color":sat?"#111":"#fff","line-width":5,"line-opacity":.55},layout:{"line-cap":"round","line-join":"round"}});
+ if(!map.getLayer("route")) map.addLayer({id:"route",type:"line",source:"route",paint:{"line-color":sat?"#fff":"#1E1E1E","line-width":2.6,"line-dasharray":[2,2]},layout:{"line-cap":"round","line-join":"round"}});
+}
+function smooth(p){ // Catmull-Rom pa' una ruta suave
+ if(p.length<3)return p;const out=[];const P=[p[0]].concat(p,[p[p.length-1]]);
+ for(let i=1;i<P.length-2;i++)for(let t=0;t<1;t+=.1){const t2=t*t,t3=t2*t;
+  out.push([0,1].map(k=>.5*((2*P[i][k])+(-P[i-1][k]+P[i+1][k])*t+(2*P[i-1][k]-5*P[i][k]+4*P[i+1][k]-P[i+2][k])*t2+(-P[i-1][k]+3*P[i][k]-3*P[i+1][k]+P[i+2][k])*t3)))}
+ out.push(p[p.length-1]);return out}
+map.on("style.load",addExtras);
+// ---------- marcadores
+const zm={},pm={};
+D.zones.filter(z=>z.route).forEach((z,k)=>{const el=document.createElement("div");el.className="zm";
+ el.innerHTML=`<div class="c">${z.route?pad(z.ord):"+"}</div><div class="l">${esc(z.short)}</div>`;
+ el.onclick=e=>{e.stopPropagation();openZone(z.id,true)};
+ zm[z.id]=new maplibregl.Marker({element:el,anchor:"top"}).setLngLat([z.lon,z.lat]).addTo(map)});
+function pinEl(i){const el=document.createElement("div");el.className="pm";el.style.background=col(i.cat);el.style.color=tc(i.cat);el.textContent=i.n;return el}
+function popupHTML(i){return `<div class="pop"><div class="cat" style="color:${i.cat==="poke"?"#9A7D0A":col(i.cat)}">${D.cats[i.cat][0]}</div><b>${esc(i.name)}</b>${flags(i.flag)}
+ <div class="n">${esc(i.note)}</div>
+ <label><input type="checkbox" ${done[i.n]?"checked":""} onchange="setDone('${i.n}',this.checked)"> ¡Ya fuimos!</label>
+ ${i.subs.map(s=>`<label><input type="checkbox" ${done[s.id]?"checked":""} onchange="setDone('${s.id}',this.checked)"><span><b style="font:600 12px Inter">${s.id} ${esc(s.name)}</b>${flags(s.flag)}</span></label>`).join("")}</div>`}
+D.items.forEach(i=>{if(i.lat==null)return;const el=pinEl(i);
+ const pop=new maplibregl.Popup({offset:14,closeButton:true,maxWidth:"280px"}).setHTML("");
+ pop.on("open",()=>pop.setHTML(popupHTML(i)));
+ pm[i.n]=new maplibregl.Marker({element:el}).setLngLat([i.lon,i.lat]).setPopup(pop).addTo(map)});
+function updPins(){const z=map.getZoom();Object.entries(pm).forEach(([n,m])=>{const i=D.items.find(x=>String(x.n)===n);
+ const el=m.getElement();el.style.display=(z>=12.2||i.zone==="afueras")?"flex":"none";
+ const a=ids(i),k=a.filter(x=>done[x]).length;el.classList.toggle("done",k===a.length&&k>0)});
+ Object.values(zm).forEach(m=>{m.getElement().style.opacity=z>=14.5?.55:1})}
+map.on("zoom",updPins);
+// ---------- sidebar
+function renderSide(){
+ const nd=ALL.filter(x=>done[x]).length;
+ document.getElementById("st1").textContent=ALL.length;document.getElementById("st2").textContent=ROUTE.length+" + afueras";
+ document.getElementById("st3").textContent=Math.round(nd*100/ALL.length)+"%";document.getElementById("progf").style.width=(nd*100/ALL.length)+"%";
+ const open=[...document.querySelectorAll(".zone.open")].map(e=>e.dataset.z), on=(document.querySelector(".zone.on")||{}).dataset;
+ document.getElementById("zones").innerHTML=D.zones.map(z=>{const its=D.items.filter(i=>i.zone===z.id),a=its.flatMap(ids),k=a.filter(x=>done[x]).length;
+  return `<div class="zone ${open.includes(z.id)?"open":""} ${on&&on.z===z.id?"on":""}" data-z="${z.id}">
+  <div class="zh"><div class="zn">${z.route?pad(z.ord):"+"}</div><div class="zt"><small>${z.route?"Parada "+pad(z.ord):"Fuera de la ruta"}</small><b>${esc(z.name)}</b></div><div class="zc">${k}/${a.length}</div></div>
+  <div class="places">${its.map(i=>`<div class="pl ${done[i.n]?"done":""}"><input type="checkbox" ${done[i.n]?"checked":""} onchange="setDone('${i.n}',this.checked)" aria-label="${esc(i.name)}">
+   <div class="dot" style="background:${col(i.cat)};color:${tc(i.cat)}">${i.n}</div>
+   <div class="pt" data-n="${i.n}"><b>${esc(i.name)}</b>${flags(i.flag)}<div class="n">${esc(i.note)}</div>
+   ${i.subs.map(s=>`<div class="sb ${done[s.id]?"done":""}"><input type="checkbox" ${done[s.id]?"checked":""} onchange="setDone('${s.id}',this.checked)" onclick="event.stopPropagation()"><i>${s.id}</i><span><b>${esc(s.name)}</b>${flags(s.flag)} – ${esc(s.note)}</span></div>`).join("")}
+   </div></div>`).join("")}</div></div>`}).join("");
+}
+window.setDone=(id,v)=>{if(v)done[id]=1;else delete done[id];save();renderSide();updPins()};
+const side=document.getElementById("side");const mobile=()=>innerWidth<=800;
+function openZone(id,fly){stopPlay();document.querySelectorAll(".zone").forEach(e=>{if(e.dataset.z===id){e.classList.add("open","on")}else e.classList.remove("on")});
+ setActive(id);if(fly)flyZone(id);
+ const el=document.querySelector(`.zone[data-z="${id}"]`);if(el&&!mobile())el.scrollIntoView({behavior:"smooth",block:"nearest"})}
+function setActive(id){Object.entries(zm).forEach(([k,m])=>m.getElement().classList.toggle("on",k===id));
+ const z=D.zones.find(x=>x.id===id);document.getElementById("rb").textContent=z&&z.route?pad(z.ord)+" / "+pad(ROUTE.length):"Afueras"}
+function bottomPad(){return mobile()&&!side.classList.contains("min")?side.offsetHeight*0.55:0}
+function flyZone(id,dur){const its=D.items.filter(i=>i.zone===id&&i.lat!=null);const z=D.zones.find(x=>x.id===id);
+ const b=new maplibregl.LngLatBounds();its.forEach(i=>b.extend([i.lon,i.lat]));
+ const cam=map.cameraForBounds(b,{padding:{top:80,bottom:80+bottomPad(),left:60,right:60},maxZoom:15.2});
+ map.flyTo({center:cam?cam.center:[z.lon,z.lat],zoom:Math.min(cam?cam.zoom:14,id==="afueras"?10:15.2),pitch:id==="afueras"?40:60,bearing:(z.ord||0)*12-30,duration:dur||2600,essential:true})}
+document.getElementById("zones").addEventListener("click",e=>{
+ if(e.target.tagName==="INPUT")return;
+ const pt=e.target.closest(".pt");if(pt){const m=pm[pt.dataset.n];if(m){stopPlay();map.flyTo({center:m.getLngLat(),zoom:16.3,pitch:62,duration:2200,essential:true,padding:{bottom:bottomPad()}});
+  map.once("moveend",()=>{if(!m.getPopup().isOpen())m.togglePopup()});if(mobile())side.classList.add("min")}return}
+ const zh=e.target.closest(".zh");if(zh){const z=zh.parentElement;const id=z.dataset.z;
+  if(z.classList.contains("open")&&z.classList.contains("on")){z.classList.remove("open");return}openZone(id,true)}});
+// ---------- play
+let playing=false,timer=null;const btn=document.getElementById("play");
+function stopPlay(){if(!playing)return;playing=false;clearTimeout(timer);btn.textContent="▶ Play ruta"}
+btn.onclick=()=>{if(playing){stopPlay();return}playing=true;btn.textContent="■ Parar";if(mobile())side.classList.add("min");let k=0;
+ const step=()=>{if(!playing)return;if(k>=ROUTE.length){stopPlay();fitAll(3000);setActive(null);return}
+  const z=ROUTE[k++];document.querySelectorAll(".zone").forEach(e=>e.classList.toggle("on",e.dataset.z===z.id));setActive(z.id);flyZone(z.id,3200);
+  map.once("moveend",()=>{if(!playing)return;map.easeTo({bearing:map.getBearing()+25,duration:2600,easing:t=>t});timer=setTimeout(step,2700)})};step()};
+// ---------- toggles
+const tSat=document.getElementById("tSat"),t3d=document.getElementById("t3d"),tBld=document.getElementById("tBld");
+tSat.onclick=()=>{sat=!sat;tSat.classList.toggle("on",sat);tSat.textContent=sat?"Satélite":"Mapa";map.setStyle(sat?satStyle():MAPSTYLE,{diff:false})};
+t3d.onclick=()=>{terr=!terr;t3d.classList.toggle("on",terr);map.setTerrain(terr?{source:"dem",exaggeration:EXA}:null)};
+tBld.onclick=()=>{bld=!bld;tBld.classList.toggle("on",bld);if(map.getLayer("bld3d"))map.setLayoutProperty("bld3d","visibility",bld?"visible":"none")};
+document.getElementById("handle").onclick=()=>side.classList.toggle("min");
+document.querySelector(".top").onclick=e=>{if(mobile()&&!e.target.closest("button"))side.classList.toggle("min")};
+map.once("dragstart",()=>document.getElementById("drag").style.opacity=0);
+if(mobile()){side.style.transition="none";side.classList.add("min");side.offsetHeight;setTimeout(()=>side.style.transition="",100)}
+renderSide();updPins();
+function fitAll(dur){const b=new maplibregl.LngLatBounds();ROUTE.forEach(z=>b.extend([z.lon,z.lat]));
+ map.fitBounds(b,{padding:mobile()?{top:150,bottom:160,left:8,right:8}:{top:90,bottom:110,left:80,right:80},pitch:55,bearing:-18,duration:dur||0})}
+map.once("load",()=>fitAll(0));
+window.__map=map;
+</script></body></html>
